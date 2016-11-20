@@ -2,6 +2,7 @@
 import sys
 import MySQLdb
 import ConfigParser
+from datetime import datetime
 
 class KeyManager:
     def __init__(self, host, uname, passwd, name):
@@ -24,20 +25,42 @@ class KeyManager:
         if(dQuery.execute("SELECT keyType, keyComment FROM keyList WHERE keyValue = %s", [keyValue]) != 0):
             sAnsw = dQuery.fetchone()
 
-            # Get key type, !: Admin, 1: One time use, @: Hour check, %: Duration
-            if (sAnsw[0] == '!'):
+            keyType = sAnsw[0].split(":", 1)[0]
+            keyParam = sAnsw[0].split(":", 1)[1]
+
+            # Get key type, !: Admin, 1: One time use, @: Hour check, %: Expiry
+            if (keyType == '!'):
                 return True
 
-            if (sAnsw[0] == '1'):
+            if (keyType == '1'):
                 dQuery.execute("DELETE FROM keyList WHERE keyValue = %s", [keyValue])
                 self.dConn.commit()
                 return True
 
-            if (sAnsw[0] == '@'):
-                return True
+            if (keyType == '@'):
+                nowTime = datetime.now().time()
 
-            if (sAnsw[0] == '%'):
-                return True
+                startTime = datetime.strptime(
+                    keyParam.split("|", 1)[0], "%H-%M").time()
+                endTime = datetime.strptime(
+                    keyParam.split("|", 1)[1], "%H-%M").time()
+
+                if (startTime < nowTime and endTime > nowTime):
+                    return True
+                else:
+                    return False
+
+            if (keyType == '%'):
+                nowDate = datetime.now().date()
+
+                expiryDate = datetime.strptime(
+                    keyParam, "%d-%m-%y").date()
+                if (expiryDate > nowDate):
+                    return True
+                else:
+                    dQuery.execute("DELETE FROM keyList WHERE keyValue = %s", [keyValue])
+                    self.dConn.commit()
+                    return False
 
         return False;
 
