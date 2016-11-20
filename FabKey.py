@@ -14,7 +14,7 @@ class KeyManager:
                 passwd=passwd,
                 db=name)
         except Exception as e:
-            print "Error: MySQL Server connect failed :" + e
+            print("Error: MySQL Server connect failed : " + str(e))
             sys.exit(1)
 
     def checkKey(self, keyValue):
@@ -40,10 +40,14 @@ class KeyManager:
             if (keyType == '@'):
                 nowTime = datetime.now().time()
 
-                startTime = datetime.strptime(
-                    keyParam.split("|", 1)[0], "%H-%M").time()
-                endTime = datetime.strptime(
-                    keyParam.split("|", 1)[1], "%H-%M").time()
+                try:
+                    startTime = datetime.strptime(
+                        keyParam.split("|", 1)[0], "%H-%M").time()
+                    endTime = datetime.strptime(
+                        keyParam.split("|", 1)[1], "%H-%M").time()
+                except Exception as e:
+                    print("Warning: Key '" + keyValue + "' has configuration problem : " + str(e))
+                    return False
 
                 if (startTime < nowTime and endTime > nowTime):
                     return True
@@ -53,16 +57,19 @@ class KeyManager:
             if (keyType == '%'):
                 nowDate = datetime.now().date()
 
-                expiryDate = datetime.strptime(
-                    keyParam, "%d-%m-%y").date()
+                try:
+                    expiryDate = datetime.strptime(
+                        keyParam, "%d-%m-%y").date()
+                except Exception as e:
+                    print("Warning: Key '" + keyValue + "' has configuration problem : " + str(e))
+                    return False
+
                 if (expiryDate > nowDate):
                     return True
                 else:
                     dQuery.execute("DELETE FROM keyList WHERE keyValue = %s", [keyValue])
                     self.dConn.commit()
                     return False
-
-        return False;
 
 class SMSHandler:
     def __init__(self):
