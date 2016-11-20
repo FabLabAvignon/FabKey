@@ -39,20 +39,20 @@ class KeyManager:
                     return False
 
                 if (expiryDate > nowDate): # If not expired
-                    return self._validateKey(keyValue, sAnsw)
+                    return self._validateKey(keyValue, sAnsw, dQuery)
                 else: # If expired
                     dQuery.execute("DELETE FROM keyList WHERE keyValue = %s", [keyValue])
                     self.dConn.commit()
                     print("Warning: Expired key '" + keyValue + "', removed from database.")
                     return False
             else: # If key is unexpirable
-                return self._validateKey(keyValue, sAnsw)
+                return self._validateKey(keyValue, sAnsw, dQuery)
 
         else:
             print("Warning: No key found for '" + keyValue + "'.")
             return False
 
-    def _validateKey(self, keyValue, sAnsw):
+    def _validateKey(self, keyValue, sAnsw, dQuery):
         keyType = sAnsw[0].split(":", 1)[0]
 
         # Get key type, !: Admin, 1: One time use, @: Hour check
