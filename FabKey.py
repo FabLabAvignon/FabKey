@@ -95,8 +95,6 @@ class KeyManager:
             print("Warning: No key found for '" + keyValue + "'.")
             return True
 
-
-
 class SMSHandler:
     def __init__(self):
         print ""
