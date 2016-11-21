@@ -1,8 +1,12 @@
 #!/usr/bin/python
-import sys
+import os, sys
+import serial
 import MySQLdb
 import ConfigParser
 from datetime import datetime
+
+if not os.geteuid() == 0: # Check if is started as root
+    sys.exit('Must be run as root.')
 
 class KeyManager:
     def __init__(self, host, uname, passwd, name):
@@ -14,8 +18,7 @@ class KeyManager:
                 passwd=passwd,
                 db=name)
         except Exception as e:
-            print("Error: MySQL Server connect failed : " + str(e))
-            sys.exit(1)
+            sys.exit("Error: MySQL Server connect failed : " + str(e))
 
     def isValid(self, keyValue):
         # Init query
@@ -41,7 +44,7 @@ class KeyManager:
                     try:
                         keyParam = sAnsw[0].split(":", 1)[1]
                     except Exception:
-                        print("Warning: Key '" + keyValue + "' has no parameter, expected parameter.")
+                        print("Warning: Key '" + keyValue + "' has no keyType parameter, expected parameter.")
                         return False
 
                     nowTime = datetime.now().time()
@@ -55,7 +58,7 @@ class KeyManager:
                         print("Warning: Key '" + keyValue + "' has configuration problem : " + str(e))
                         return False
 
-                    if (startTime < nowTime and endTime > nowTime):
+                    if (startTime < nowTime and endTime > nowTime): # If in time range
                         return True
                     else:
                         return False
@@ -96,8 +99,17 @@ class KeyManager:
             return True
 
 class SMSHandler:
-    def __init__(self):
-        print ""
+    def __init__(self, serialPort):
+        # Preconfigure serial
+        self.serIO = serial.Serial()
+        self.serIO.baudrate = 19200
+        self.serIO.port = serialPort
+
+        # Connect to serial port
+        try:
+            self.serIO.open()
+        except Exception as e:
+            sys.exit("Error: Failed to open serial port '" + serialPort + "' : " + str(e))
 
 # Loading config file
 Config = ConfigParser.ConfigParser()
@@ -110,4 +122,4 @@ if __name__ == '__main__':
         Config.get("db", "passwd"),
         Config.get("db", "name"))
 
-    print(keyMgr.isValid("TC0989"))
+    smsHandler = SMSHandler("/dev/tty1")
