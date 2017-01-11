@@ -122,4 +122,8 @@ if __name__ == '__main__':
         Config.get("db", "passwd"),
         Config.get("db", "name"))
 
-    smsHandler = SMSHandler("/dev/tty1")
+<<<<<<< HEAD
+    smsHandler = SMSHandler("/dev/ttyACM0")
+=======
+    smsHandler = SMSHandler(Config.get("serial", "sPort"))
+>>>>>>> 548eb1f0a1a12253a2e2e6744f143db44ff94ef4
