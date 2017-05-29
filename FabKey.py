@@ -102,7 +102,7 @@ class SMSHandler:
     def __init__(self, serialPort):
         # Preconfigure serial
         self.serIO = serial.Serial()
-        self.serIO.baudrate = 19200
+        self.serIO.baudrate = 9600
         self.serIO.port = serialPort
 
         # Connect to serial port
@@ -110,6 +110,28 @@ class SMSHandler:
             self.serIO.open()
         except Exception as e:
             sys.exit("Error: Failed to open serial port '" + serialPort + "' : " + str(e))
+
+        # Flush in and out
+        self.serIO.flushInput()
+        self.serIO.flushOutput()
+	
+
+	sys.exit(self.sendSerial("pwd"))
+        #while self.serIO.open():
+            
+
+    def getLastestSMS(self):
+        self.lol = "mdr"
+
+    def sendSerial(self, command2send):
+        self.serIO.write(command2send)
+
+	nothingAnswered = True
+	while nothingAnswered:
+            if self.serIO.inWaiting() > 0:
+                nothingAnwered = False
+
+        return self.serIO.readline()
 
 # Loading config file
 Config = ConfigParser.ConfigParser()
@@ -122,4 +144,4 @@ if __name__ == '__main__':
         Config.get("db", "passwd"),
         Config.get("db", "name"))
 
-    smsHandler = SMSHandler(Config.get("serial", "sPort"))
+    smsHandler = SMSHandler(Config.get("ser", "sPort")) # Start the smsHandler to handle incoming sms
